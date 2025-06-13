@@ -47,7 +47,7 @@ public class PersonListController {
     @PutMapping("/{id}")
     public PersonList updateList(@PathVariable Long id, @RequestBody PersonList updatedList) {
         return personListRepository.findById(id).map(list -> {
-            list.setNom(updatedList.getNom());
+            list.setName(updatedList.getName());
             // autres propriétés à mettre à jour si besoin
             return personListRepository.save(list);
         }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Liste non trouvée avec id : " + id));

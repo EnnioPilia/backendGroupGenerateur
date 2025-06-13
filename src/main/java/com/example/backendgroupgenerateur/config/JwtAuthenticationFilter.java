@@ -1,11 +1,9 @@
 package com.example.backendgroupgenerateur.config;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,7 +13,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.backendgroupgenerateur.service.UserService;
 
-import java.io.IOException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -24,7 +25,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JWTUtils jwtUtils;
 
     @Autowired
-    private UserService userService;  // on utilise UserService ici
+    @Lazy
+    private UserService userService;  // injection en lazy pour casser la dépendance circulaire
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

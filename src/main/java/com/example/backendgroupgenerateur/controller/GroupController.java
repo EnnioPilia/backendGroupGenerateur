@@ -1,28 +1,62 @@
-// package com.example.backendgroupgenerateur.controller;
+package com.example.backendgroupgenerateur.controller;
 
-// import org.springframework.web.bind.annotation.*;
-// import java.util.List;
+import java.util.List;
+import java.util.Optional;
 
-// import com.example.backendgroupgenerateur.model.PersonList;
-// import com.example.backendgroupgenerateur.repository.PersonListRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-// @RestController
-// @RequestMapping("/lists")
-// public class groupController {
+import com.example.backendgroupgenerateur.model.Group;
+import com.example.backendgroupgenerateur.service.GroupService;
 
-//     private final PersonListRepository personListRepository;
+@RestController
+@RequestMapping("/groups")
+public class GroupController {
 
-//     public ListController(PersonListRepository personListRepository) {
-//         this.personListRepository = personListRepository;
-//     }
+    private final GroupService groupService;
 
-//     @GetMapping
-//     public List<PersonList> getAllLists() {
-//         return personListRepository.findAll();
-//     }
+    @Autowired
+    public GroupController(GroupService groupService) {
+        this.groupService = groupService;
+    }
 
-//     @PostMapping
-//     public PersonList createList(@RequestBody PersonList list) {
-//         return personListRepository.save(list);
-//     }
-// }
+    // Créer un groupe
+    @PostMapping
+    public ResponseEntity<Group> createGroup(@RequestBody Group group) {
+        Group savedGroup = groupService.create(group);
+        return ResponseEntity.ok(savedGroup);
+    }
+
+    // Récupérer un groupe par ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Group> getGroupById(@PathVariable Long id) {
+        Optional<Group> groupOpt = groupService.findById(id);
+        return groupOpt.map(ResponseEntity::ok)
+                       .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Récupérer tous les groupes
+    @GetMapping
+    public ResponseEntity<List<Group>> getAllGroups() {
+        List<Group> groups = groupService.findAll();
+        return ResponseEntity.ok(groups);
+    }
+
+    // Supprimer un groupe par ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteGroup(@PathVariable Long id) {
+        boolean deleted = groupService.deleteById(id);
+        if (deleted) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+}

@@ -24,8 +24,8 @@ public class Group {
 
     // Many Group -> One GroupHistory
     @ManyToOne
-    @JoinColumn(name = "group_history_id", nullable = false)
-    private GroupHistory groupHistory;
+    @JoinColumn(name = "group_Draws_id", nullable = false)
+    private GroupDraws GroupDraws;
 
     // Many Group <-> Many Person via GroupPerson
     @ManyToMany
@@ -49,11 +49,11 @@ public class Group {
     public void setName(String name) {
         this.name = name;
     }
-    public GroupHistory getGroupHistory() {
-        return groupHistory;
+    public GroupDraws getGroupHistory() {
+        return GroupDraws;
     }
-    public void setGroupHistory(GroupHistory groupHistory) {
-        this.groupHistory = groupHistory;
+    public void setGroupHistory(GroupDraws groupHistory) {
+        this.GroupDraws = groupHistory;
     }
     public List<Person> getPersons() {
         return persons;

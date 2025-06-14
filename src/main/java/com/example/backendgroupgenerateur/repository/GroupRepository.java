@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.example.backendgroupgenerateur.model.Group;
 
 public interface GroupRepository extends JpaRepository<Group, Long> {
-    List<Group> findByGroupHistoryId(Long groupHistoryId);
+List<Group> findByDrawsId(Long drawsId);
 }

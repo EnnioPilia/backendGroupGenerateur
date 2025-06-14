@@ -27,11 +27,24 @@ public class GroupService {
         return groupRepository.findById(id);
     }
 
-    public List<Group> findByGroupHistoryId(Long groupHistoryId) {
-        return groupRepository.findByGroupHistoryId(groupHistoryId);
-    }
+public List<Group> findByDrawsId(Long drawsId) {
+    return groupRepository.findByDrawsId(drawsId);
+}
 
     public void delete(Long id) {
         groupRepository.deleteById(id);
     }
+
+public List<Group> findAll() {
+    return groupRepository.findAll();
+}
+
+public boolean deleteById(Long id) {
+    if (groupRepository.existsById(id)) {
+        groupRepository.deleteById(id);
+        return true;
+    }
+    return false;
+}
+
 }

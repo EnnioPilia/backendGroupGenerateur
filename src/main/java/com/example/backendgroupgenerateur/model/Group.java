@@ -25,7 +25,7 @@ public class Group {
     // Many Group -> One GroupHistory
     @ManyToOne
     @JoinColumn(name = "group_Draws_id", nullable = false)
-    private GroupDraws GroupDraws;
+    private GroupDraws groupDraws;
 
     // Many Group <-> Many Person via GroupPerson
     @ManyToMany
@@ -50,10 +50,10 @@ public class Group {
         this.name = name;
     }
     public GroupDraws getGroupHistory() {
-        return GroupDraws;
+        return groupDraws;
     }
     public void setGroupHistory(GroupDraws groupHistory) {
-        this.GroupDraws = groupHistory;
+        this.groupDraws = groupHistory;
     }
     public List<Person> getPersons() {
         return persons;

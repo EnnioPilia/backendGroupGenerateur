@@ -1,10 +1,13 @@
 package com.example.backendgroupgenerateur.config;
 
-import io.jsonwebtoken.*;
+import java.util.Date;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 @Component
 public class JWTUtils {
@@ -15,12 +18,24 @@ public class JWTUtils {
     @Value("${app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
+    // Génère un token avec juste le username
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)  // HS512 partout
+                .compact();
+    }
+
+    // Génère un token avec email + role
+    public String generateToken(String email, String role) {
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("role", role)  // Ajout du rôle dans les claims
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)  // HS512 ici aussi
                 .compact();
     }
 
@@ -41,14 +56,4 @@ public class JWTUtils {
         }
         return false;
     }
-    public String generateToken(String email, String role) {
-    return Jwts.builder()
-        .setSubject(email)
-        .claim("role", role) // Ajoute le rôle dans les claims
-        .setIssuedAt(new Date())
-        .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-        .signWith(SignatureAlgorithm.HS256, jwtSecret)
-        .compact();
-}
-
 }

@@ -28,7 +28,7 @@ public class GroupService {
     }
 
 public List<Group> findByDrawsId(Long drawsId) {
-    return groupRepository.findByDrawsId(drawsId);
+    return groupRepository.findByGroupDrawsId(drawsId);
 }
 
     public void delete(Long id) {

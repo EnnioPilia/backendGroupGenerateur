@@ -1,7 +1,8 @@
 package com.example.backendgroupgenerateur.service;
 
-import com.example.backendgroupgenerateur.model.User;
-import com.example.backendgroupgenerateur.repository.UserRepository;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -9,8 +10,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.backendgroupgenerateur.model.User;
+import com.example.backendgroupgenerateur.repository.UserRepository;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -57,14 +58,20 @@ public class UserService implements UserDetailsService {
     }
 
     // Authentification Spring Security
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec email : " + email));
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .roles(user.getRole())
-                .build();
+@Override
+public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec email : " + email));
+
+    if (!user.isActif()) {
+        throw new UsernameNotFoundException("Utilisateur non actif");
     }
+
+    return org.springframework.security.core.userdetails.User.builder()
+            .username(user.getEmail())
+            .password(user.getPassword())
+            .roles(user.getRole())  // ici, ça crée un rôle "USER" par défaut comme tu as
+            .build();
+}
+
 }

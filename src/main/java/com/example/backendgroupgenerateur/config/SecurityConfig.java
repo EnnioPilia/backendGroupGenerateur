@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/login", "/auth/register").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/users/me").hasAnyRole("USER", "ADMIN") // accès USER et ADMIN à /users/me
                 .requestMatchers("/users/**").hasRole("ADMIN") // 👈 Protège les routes /users
                 .anyRequest().authenticated()
                 )

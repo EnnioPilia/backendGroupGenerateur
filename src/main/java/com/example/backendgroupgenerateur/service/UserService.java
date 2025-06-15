@@ -25,13 +25,12 @@ public class UserService implements UserDetailsService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // Enregistre un nouvel utilisateur
+    // Enregistre un nouvel utilisateur avec rôle USER par défaut
     public User register(User user) {
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new RuntimeException("Email déjà utilisé");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole("USER");
         user.setActif(true);
         return userRepository.save(user);
     }
@@ -41,20 +40,21 @@ public class UserService implements UserDetailsService {
         return userRepository.findAll();
     }
 
-    // Création manuelle d'un utilisateur (ex: par un admin)
+    // Création manuelle d'un utilisateur (ex: par un admin) avec rôle USER
     public User createUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole("USER");
         user.setActif(true);
         return userRepository.save(user);
     }
-// Création d'un administrateur
-public User createAdmin(User user) {
-    user.setPassword(passwordEncoder.encode(user.getPassword()));
-    user.setRole("ADMIN");  // Ici le rôle ADMIN
-    user.setActif(true);
-    return userRepository.save(user);
-}
+
+    // Création d'un administrateur avec rôle ADMIN
+    public User createAdmin(User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole("ADMIN");
+        user.setActif(true);
+        return userRepository.save(user);
+    }
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
@@ -64,21 +64,22 @@ public User createAdmin(User user) {
         return userRepository.findById(id);
     }
 
-    // Authentification Spring Security
-@Override
-public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-    User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec email : " + email));
+    // Chargement de l'utilisateur pour Spring Security
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec email : " + email));
 
-    if (!user.isActif()) {
-        throw new UsernameNotFoundException("Utilisateur non actif");
+        if (!user.isActif()) {
+            throw new UsernameNotFoundException("Utilisateur non actif");
+        }
+
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getEmail())
+                .password(user.getPassword())
+                // Ici, Spring Security attend un ou plusieurs rôles sans "ROLE_" devant.
+                // Donc on met user.getRole() en majuscules et ça créera un rôle "ROLE_USER" ou "ROLE_ADMIN" automatiquement.
+                .roles(user.getRole())
+                .build();
     }
-
-    return org.springframework.security.core.userdetails.User.builder()
-            .username(user.getEmail())
-            .password(user.getPassword())
-            .roles(user.getRole())  // ici, ça crée un rôle "USER" par défaut comme tu as
-            .build();
-}
-
 }

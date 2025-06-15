@@ -27,42 +27,52 @@ public class AuthController {
 
     @Autowired
     private JWTUtils jwtUtils;
+
     @Autowired
     private UserService userService;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        try {
-            User user = new User();
-            user.setEmail(request.getEmail());
-            user.setPassword(request.getPassword());  // le service UserService encode le mot de passe
-            userService.register(user);
-            return ResponseEntity.ok("Utilisateur enregistré");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-
-@PostMapping("/login")
-public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+@PostMapping("/register")
+public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
     try {
-        var authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(request.getPassword());  // le service UserService encode le mot de passe
 
-        // récupérer le rôle depuis Authentication
-        String role = authentication.getAuthorities().stream()
-                .findFirst()
-                .map(grantedAuthority -> grantedAuthority.getAuthority())
-                .orElse("ROLE_USER"); // fallback au cas où
+        String role = request.getRole();
+        if (role == null || (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user"))) {
+            role = "USER";  // Par défaut USER si rôle absent ou incorrect
+        }
+        user.setRole(role.toUpperCase());
 
-        String token = jwtUtils.generateToken(request.getEmail(), role);
-
-        return ResponseEntity.ok(new AuthResponse(token));
-    } catch (BadCredentialsException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        userService.register(user);
+        return ResponseEntity.ok("Utilisateur enregistré");
+    } catch (RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 }
 
 
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            var authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+
+            // Récupérer le rôle depuis l'authentication (ex: "ROLE_ADMIN" ou "ROLE_USER")
+            String role = authentication.getAuthorities().stream()
+                    .findFirst()
+                    .map(grantedAuthority -> grantedAuthority.getAuthority())
+                    .orElse("ROLE_USER");
+
+            // Retirer le préfixe "ROLE_" et mettre en minuscules pour le token
+            String cleanRole = role.startsWith("ROLE_") ? role.substring(5).toLowerCase() : role.toLowerCase();
+
+            String token = jwtUtils.generateToken(request.getEmail(), cleanRole);
+
+            return ResponseEntity.ok(new AuthResponse(token));
+        } catch (BadCredentialsException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Identifiants invalides");
+        }
+    }
 }

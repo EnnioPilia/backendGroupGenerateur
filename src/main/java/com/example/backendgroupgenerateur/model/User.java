@@ -10,9 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "users") // nom de la table en base
+@Table(name = "users")
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,7 +25,7 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    private String role = "USER";
+    private String role = "USER";  // par défaut en majuscules
 
     private boolean actif = false;
 
@@ -34,8 +33,19 @@ public class User {
 
     private LocalDateTime dateAcceptationCGU;
 
-    // Constructeur vide obligatoire pour JPA
     public User() {}
+
+    // getters & setters
+
+    public String getRole() {
+        return role;
+    }
+    public void setRole(String role) {
+        this.role = role.toUpperCase(); // forcer majuscule pour cohérence
+    }
+    
+    // autres getters/setters...
+
 
     // Getters et setters (tu peux générer avec ton IDE)
 
@@ -69,12 +79,7 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
-    public String getRole() {
-        return role;
-    }
-    public void setRole(String role) {
-        this.role = role;
-    }
+
     public boolean isActif() {
         return actif;
     }

@@ -1,12 +1,10 @@
 package com.example.backendgroupgenerateur.config;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -15,8 +13,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.backendgroupgenerateur.service.UserService;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,57 +24,51 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JWTUtils jwtUtils;
 
+    @Autowired
+    @Lazy
+    private UserService userService;
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getServletPath();
         System.out.println("Request path: " + path + " => shouldNotFilter: " + path.startsWith("/auth/"));
-
         return path.startsWith("/auth/");
     }
 
-    @Autowired
-    @Lazy
-    private UserService userService;  // injection en lazy pour casser la dépendance circulaire
+@Override
+protected void doFilterInternal(HttpServletRequest request,
+        HttpServletResponse response,
+        FilterChain filterChain)
+        throws ServletException, IOException {
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
+    final String authHeader = request.getHeader("Authorization");
+    System.out.println("Authorization header: " + authHeader);
 
-        final String authHeader = request.getHeader("Authorization");
+    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        String token = authHeader.substring(7);
+        System.out.println("JWT token: " + token);
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            if (jwtUtils.validateToken(token)) {
-                String username = jwtUtils.getUsernameFromToken(token);
+        if (jwtUtils.validateToken(token)) {
+            String username = jwtUtils.getUsernameFromToken(token);
+            System.out.println("Username from token: " + username);
 
-                // Extraire le rôle du token
-                Claims claims = Jwts.parserBuilder()
-                        .setSigningKey(jwtUtils.getKey())
-                        .build()
-                        .parseClaimsJws(token)
-                        .getBody();
-
-                String role = claims.get("role", String.class);
-
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = userService.loadUserByUsername(username);
-
-                    // Créer l'authentication avec le rôle extrait du token
-                    UsernamePasswordAuthenticationToken authToken
-                            = new UsernamePasswordAuthenticationToken(
-                                    userDetails, null,
-                                    List.of(new SimpleGrantedAuthority(role))
-                            );
-
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authToken
+                        = new UsernamePasswordAuthenticationToken(
+                                userDetails, null,
+                                userDetails.getAuthorities());
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+                System.out.println("Authentication set in context");
             }
+        } else {
+            System.out.println("Token validation failed");
         }
-
-        filterChain.doFilter(request, response);
+    } else {
+        System.out.println("No Authorization header or does not start with Bearer");
     }
 
+    filterChain.doFilter(request, response);
+}
 }

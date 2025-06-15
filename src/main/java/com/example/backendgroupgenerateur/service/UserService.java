@@ -48,6 +48,13 @@ public class UserService implements UserDetailsService {
         user.setActif(true);
         return userRepository.save(user);
     }
+// Création d'un administrateur
+public User createAdmin(User user) {
+    user.setPassword(passwordEncoder.encode(user.getPassword()));
+    user.setRole("ADMIN");  // Ici le rôle ADMIN
+    user.setActif(true);
+    return userRepository.save(user);
+}
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);

@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +17,6 @@ import com.example.backendgroupgenerateur.dto.LoginRequest;
 import com.example.backendgroupgenerateur.dto.RegisterRequest;
 import com.example.backendgroupgenerateur.model.User;
 import com.example.backendgroupgenerateur.service.UserService;
-
 
 @RestController
 @RequestMapping("/auth")
@@ -34,8 +32,6 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-            System.out.println("Register request received: " + request.getEmail());
-
         try {
             User user = new User();
             user.setEmail(request.getEmail());
@@ -47,17 +43,26 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
+@PostMapping("/login")
+public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    try {
+        var authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
 
-            String token = jwtUtils.generateToken(request.getEmail());
-            return ResponseEntity.ok(new AuthResponse(token));
-        } catch (BadCredentialsException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        }
+        // récupérer le rôle depuis Authentication
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .orElse("ROLE_USER"); // fallback au cas où
+
+        String token = jwtUtils.generateToken(request.getEmail(), role);
+
+        return ResponseEntity.ok(new AuthResponse(token));
+    } catch (BadCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
     }
+}
+
+
 }

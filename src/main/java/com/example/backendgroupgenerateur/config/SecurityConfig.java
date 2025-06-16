@@ -29,13 +29,16 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // désactivé pour REST API
                 .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/login", "/auth/register").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/users/me").hasAnyRole("USER", "ADMIN") // accès USER et ADMIN à /users/me
-                .requestMatchers("/users/**").hasRole("ADMIN") // 👈 Protège les routes /users
-                .anyRequest().authenticated()
-                )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // JWT stateless
+                        .requestMatchers("/auth/login", "/auth/register").permitAll()
+                        .requestMatchers("/persons/**").hasAnyRole("USER", "ADMIN")  // <-- ajout explicite
+                        .requestMatchers("/personlists/**").hasAnyRole("USER", "ADMIN") 
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/users/me").hasAnyRole("USER", "ADMIN") // accès USER et ADMIN à /users/me
+                        .requestMatchers("/users/**").hasRole("ADMIN") // 👈 Protège les routes /users
+
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // JWT
+                                                                                                               // stateless
 
         // Ajout du filtre JWT avant l'authentification standard
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

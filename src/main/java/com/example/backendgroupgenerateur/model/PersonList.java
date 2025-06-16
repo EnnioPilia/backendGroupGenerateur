@@ -2,6 +2,8 @@ package com.example.backendgroupgenerateur.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -29,6 +31,8 @@ public class PersonList {
 
     // One PersonList -> Many Person
     @OneToMany(mappedBy = "personList", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
+
     private List<Person> persons;
 
     // Getters & Setters

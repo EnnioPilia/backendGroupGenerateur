@@ -31,4 +31,9 @@ public class GroupDrawsService {
     public Optional<GroupDraws> findById(Long id) {
         return groupDrawsRepository.findById(id);
     }
+
+    
+    public void deleteById(Long id) {
+        groupDrawsRepository.deleteById(id);
+    }
 }

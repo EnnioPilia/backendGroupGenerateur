@@ -31,33 +31,35 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
-@PostMapping("/register")
-public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-    try {
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());  // le service UserService encode le mot de passe
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+        try {
+            User user = new User();
+            user.setEmail(request.getEmail());
+            user.setPassword(request.getPassword());
 
-        String role = request.getRole();
-        if (role == null || (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user"))) {
-            role = "USER";  // Par défaut USER si rôle absent ou incorrect
+            String role = request.getRole();
+            if (role == null || (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user"))) {
+                role = "USER";
+            }
+            user.setRole(role.toUpperCase());
+
+            userService.register(user);
+
+            // Générer le token après inscription
+            String token = jwtUtils.generateToken(user.getEmail(), user.getRole().toLowerCase());
+
+            return ResponseEntity.ok(new AuthResponse(token));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-        user.setRole(role.toUpperCase());
-
-        userService.register(user);
-        return ResponseEntity.ok("Utilisateur enregistré");
-    } catch (RuntimeException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
-}
-
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             var authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
             // Récupérer le rôle depuis l'authentication (ex: "ROLE_ADMIN" ou "ROLE_USER")
             String role = authentication.getAuthorities().stream()
@@ -69,8 +71,9 @@ public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
             String cleanRole = role.startsWith("ROLE_") ? role.substring(5).toLowerCase() : role.toLowerCase();
 
             String token = jwtUtils.generateToken(request.getEmail(), cleanRole);
+            System.out.println("Token généré : " + token);
 
-            return ResponseEntity.ok(new AuthResponse(token));
+return ResponseEntity.ok(new AuthResponse(token)); // ✅ CORRECT si `AuthResponse` a bien un champ `token`
         } catch (BadCredentialsException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Identifiants invalides");
         }

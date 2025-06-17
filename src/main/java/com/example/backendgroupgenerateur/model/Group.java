@@ -2,6 +2,8 @@ package com.example.backendgroupgenerateur.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,6 +27,8 @@ public class Group {
     // Many Group -> One GroupHistory
     @ManyToOne
     @JoinColumn(name = "group_Draws_id", nullable = false)
+    @JsonBackReference
+
     private GroupDraws groupDraws;
 
     // Many Group <-> Many Person via GroupPerson
@@ -49,12 +53,14 @@ public class Group {
     public void setName(String name) {
         this.name = name;
     }
-    public GroupDraws getGroupHistory() {
-        return groupDraws;
-    }
-    public void setGroupHistory(GroupDraws groupHistory) {
-        this.groupDraws = groupHistory;
-    }
+public GroupDraws getGroupDraws() {
+    return groupDraws;
+}
+
+public void setGroupDraws(GroupDraws groupDraws) {
+    this.groupDraws = groupDraws;
+}
+
     public List<Person> getPersons() {
         return persons;
     }

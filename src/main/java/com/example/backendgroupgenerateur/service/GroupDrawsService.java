@@ -18,9 +18,15 @@ public class GroupDrawsService {
         this.groupDrawsRepository = groupDrawsRepository;
     }
 
-    public GroupDraws create(GroupDraws groupDraws) {
-        return groupDrawsRepository.save(groupDraws);
+   public GroupDraws create(GroupDraws groupDraws) {
+    if (groupDraws.getGroups() != null) {
+        groupDraws.getGroups().forEach(group -> {
+            group.setGroupDraws(groupDraws); // 🔥 Lien vers le parent
+        });
     }
+    return groupDrawsRepository.save(groupDraws); // Hibernate gère la cascade
+}
+
 
     public Optional<GroupDraws> findById(Long id) {
         return groupDrawsRepository.findById(id);

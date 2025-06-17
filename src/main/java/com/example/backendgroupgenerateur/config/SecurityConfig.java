@@ -31,7 +31,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login", "/auth/register").permitAll()
                         .requestMatchers("/persons/**").hasAnyRole("USER", "ADMIN")  // <-- ajout explicite
-                        .requestMatchers("/personlists/**").hasAnyRole("USER", "ADMIN") 
+                        .requestMatchers("/personlists/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/groupdraws/**").hasAnyRole("USER", "ADMIN") 
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/users/me").hasAnyRole("USER", "ADMIN") // accès USER et ADMIN à /users/me
                         .requestMatchers("/users/**").hasRole("ADMIN") // 👈 Protège les routes /users

@@ -73,7 +73,7 @@ public class AuthController {
             String token = jwtUtils.generateToken(request.getEmail(), cleanRole);
             System.out.println("Token généré : " + token);
 
-return ResponseEntity.ok(new AuthResponse(token)); // ✅ CORRECT si `AuthResponse` a bien un champ `token`
+            return ResponseEntity.ok(new AuthResponse(token)); // ✅ CORRECT si `AuthResponse` a bien un champ `token`
         } catch (BadCredentialsException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Identifiants invalides");
         }

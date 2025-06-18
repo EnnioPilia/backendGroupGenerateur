@@ -78,8 +78,19 @@ public class UserService implements UserDetailsService {
                 .username(user.getEmail())
                 .password(user.getPassword())
                 // Ici, Spring Security attend un ou plusieurs rôles sans "ROLE_" devant.
-                // Donc on met user.getRole() en majuscules et ça créera un rôle "ROLE_USER" ou "ROLE_ADMIN" automatiquement.
+                // Donc on met user.getRole() en majuscules et ça créera un rôle "ROLE_USER" ou
+                // "ROLE_ADMIN" automatiquement.
                 .roles(user.getRole())
                 .build();
     }
+
+    public boolean deleteUserById(Long id) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isPresent()) {
+            userRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
 }

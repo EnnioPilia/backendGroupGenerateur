@@ -82,4 +82,13 @@ public class UserService implements UserDetailsService {
                 .roles(user.getRole())
                 .build();
     }
+    public boolean deleteUserById(Long id) {
+    Optional<User> user = userRepository.findById(id);
+    if (user.isPresent()) {
+        userRepository.deleteById(id);
+        return true;
+    }
+    return false;
+}
+
 }

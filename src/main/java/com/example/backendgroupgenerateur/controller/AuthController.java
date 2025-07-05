@@ -30,19 +30,25 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
-
 @PostMapping("/register")
 public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
     try {
         User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());  // le service UserService encode le mot de passe
 
-        String role = request.getRole();
-        if (role == null || (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user"))) {
-            role = "USER";  // Par défaut USER si rôle absent ou incorrect
+        // Split le nom complet en nom et prénom
+        if (request.getName() != null) {
+            String[] parts = request.getName().split(" ", 2);
+            user.setNom(parts[0]);
+            user.setPrenom(parts.length > 1 ? parts[1] : "");
+        } else {
+            user.setNom("");
+            user.setPrenom("");
         }
-        user.setRole(role.toUpperCase());
+
+        user.setEmail(request.getEmail());
+        user.setPassword(request.getPassWord()); // mot de passe encodé en service UserService
+        user.setAge(request.getAge());
+        user.setRole(request.getRole() == null ? "USER" : request.getRole().toUpperCase());
 
         userService.register(user);
         return ResponseEntity.ok("Utilisateur enregistré");
@@ -50,6 +56,7 @@ public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
 }
+
 
 
     @PostMapping("/login")

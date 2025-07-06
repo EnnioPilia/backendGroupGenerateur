@@ -1,7 +1,10 @@
 package com.example.backendgroupgenerateur.controller;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -12,11 +15,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.backendgroupgenerateur.config.JWTUtils;
-import com.example.backendgroupgenerateur.dto.AuthResponse;
 import com.example.backendgroupgenerateur.dto.LoginRequest;
 import com.example.backendgroupgenerateur.dto.RegisterRequest;
 import com.example.backendgroupgenerateur.model.User;
 import com.example.backendgroupgenerateur.service.UserService;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/auth")
@@ -59,27 +63,39 @@ public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
 
 
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        try {
-            var authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
+@PostMapping(value = "/login", produces = "application/json")
+public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletResponse response) {
+    try {
+        var authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+        );
 
-            // Récupérer le rôle depuis l'authentication (ex: "ROLE_ADMIN" ou "ROLE_USER")
-            String role = authentication.getAuthorities().stream()
-                    .findFirst()
-                    .map(grantedAuthority -> grantedAuthority.getAuthority())
-                    .orElse("ROLE_USER");
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .orElse("ROLE_USER");
 
-            // Retirer le préfixe "ROLE_" et mettre en minuscules pour le token
-            String cleanRole = role.startsWith("ROLE_") ? role.substring(5).toLowerCase() : role.toLowerCase();
+        String cleanRole = role.startsWith("ROLE_") ? role.substring(5).toLowerCase() : role.toLowerCase();
 
-            String token = jwtUtils.generateToken(request.getEmail(), cleanRole);
+        String token = jwtUtils.generateToken(request.getEmail(), cleanRole);
 
-            return ResponseEntity.ok(new AuthResponse(token));
-        } catch (BadCredentialsException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Identifiants invalides");
-        }
+        ResponseCookie cookie = ResponseCookie.from("adminToken", token)
+                .httpOnly(true)
+                .secure(false) // false en dev, true en prod HTTPS
+                .path("/")
+                .maxAge(24 * 60 * 60)
+                .sameSite("Strict")
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+
+        // RENVOYER LE TOKEN DANS LE JSON aussi (pour que Angular puisse le stocker ou vérifier)
+        return ResponseEntity.ok(Map.of("token", token));
+    } catch (BadCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Identifiants invalides"));
     }
+}
+
+
+
 }

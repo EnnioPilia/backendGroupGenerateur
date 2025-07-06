@@ -15,6 +15,7 @@ import com.example.backendgroupgenerateur.service.UserService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -35,40 +36,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return path.startsWith("/auth/");
     }
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
-            throws ServletException, IOException {
+@Override
+protected void doFilterInternal(HttpServletRequest request,
+                                HttpServletResponse response,
+                                FilterChain filterChain)
+        throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
-        System.out.println("Authorization header: " + authHeader);
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            System.out.println("JWT token: " + token);
-
-            if (jwtUtils.validateToken(token)) {
-                String username = jwtUtils.getUsernameFromToken(token);
-                System.out.println("Username from token: " + username);
-
-                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = userService.loadUserByUsername(username);
-                    UsernamePasswordAuthenticationToken authToken
-                            = new UsernamePasswordAuthenticationToken(
-                                    userDetails, null,
-                                    userDetails.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                    System.out.println("Authentication set in context");
-                }
-            } else {
-                System.out.println("Token validation failed");
+    // 🔍 Lire le token à partir du cookie "adminToken"
+    String token = null;
+    if (request.getCookies() != null) {
+        for (Cookie cookie : request.getCookies()) {
+            if ("adminToken".equals(cookie.getName())) {
+                token = cookie.getValue();
+                break;
             }
-        } else {
-            System.out.println("No Authorization header or does not start with Bearer");
         }
-
-        filterChain.doFilter(request, response);
     }
+
+    if (token != null && jwtUtils.validateToken(token)) {
+        String username = jwtUtils.getUsernameFromToken(token);
+
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userService.loadUserByUsername(username);
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
+    }
+
+    filterChain.doFilter(request, response);
+}
+
 }

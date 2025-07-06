@@ -1,18 +1,18 @@
 package com.example.backendgroupgenerateur.service;
 
-import com.example.backendgroupgenerateur.dto.LoginRequest;
-import com.example.backendgroupgenerateur.dto.RegisterRequest;
-import com.example.backendgroupgenerateur.dto.AuthResponse;
-import com.example.backendgroupgenerateur.model.User;
-import com.example.backendgroupgenerateur.repository.UserRepository;
-import com.example.backendgroupgenerateur.config.JWTUtils;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.example.backendgroupgenerateur.config.JWTUtils;
+import com.example.backendgroupgenerateur.dto.AuthResponse;
+import com.example.backendgroupgenerateur.dto.LoginRequest;
+import com.example.backendgroupgenerateur.dto.RegisterRequest;
+import com.example.backendgroupgenerateur.model.User;
+import com.example.backendgroupgenerateur.repository.UserRepository;
 
 @Service
 public class AuthService {
@@ -38,7 +38,7 @@ public class AuthService {
 
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.getPassWord()));
         user.setRole("USER");
         user.setActif(true);
         userRepository.save(user);
